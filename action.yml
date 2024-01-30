@@ -1,0 +1,146 @@
+name: Maintain Pull Request
+description: Maintain a single pull request given a set of head/base branches
+inputs:
+  head_ref:
+    description: pull request head branch
+    required: true
+    default: ${{ github.event.pull_request.head.ref }}
+
+  base_ref:
+    description: pull request base branch
+    required: true
+    default: ${{ github.event.pull_request.base.ref || 'main' }}
+
+  pr_title:
+    description: pull request title
+    required: true
+
+  pr_body:
+    description: pull request body
+    required: true
+
+  commit_message:
+    description: commit message
+
+  committer_name:
+    description: committer name
+    required: true
+    default: github-actions
+  
+  committer_email:
+    description: committer email
+    required: true
+    default: github-actions@github.com
+
+  labels:
+    description: comma separated list of labels to add to PR
+    required: false
+
+outputs:
+  number:
+    description: pull request number
+    value: ${{ steps.create-pull-request.outputs.number }}
+
+runs:
+  using: "composite"
+  steps:
+    - shell: bash
+      name: Check for any changes
+      if: inputs.commit_message == ''
+      run: |
+        if [ -n "$(git status --porcelain)" ]; then
+          echo "Changes detected while no commit message was specified"
+          exit 1
+        fi
+
+    - shell: bash
+      name: Setup git config
+      env:
+        COMMITTER_NAME: ${{ inputs.committer_name }}
+        COMMITTER_EMAIL: ${{ inputs.committer_email }}
+      run: |
+        if [ ! -z "${COMMITTER_NAME}" ]; then
+          git config --global user.name "${COMMITTER_NAME}"
+        fi
+        if [ ! -z "${COMMITTER_EMAIL}" ]; then
+          git config --global user.email "${COMMITTER_EMAIL}"
+        fi
+
+    - shell: bash
+      if: inputs.commit_message != ''
+      id: push-changes
+      name: Push changes
+      env:
+        COMMIT_MESSAGE: ${{ inputs.commit_message }}
+        PR_BRANCH: ${{ inputs.head_ref }}
+      run: |
+        git checkout -b "${PR_BRANCH}"
+        git add .
+
+        if [ -n "$(git status -s)" ]; then
+          echo "Adding updated files"
+          git commit --no-verify -m "${COMMIT_MESSAGE}"
+          git push --no-verify --force origin "${PR_BRANCH}"
+          echo "no_changes=" >> $GITHUB_OUTPUT
+        else
+          echo "Nothing to commit"
+          echo "no_changes=true" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Create or update pull request
+      uses: actions/github-script@v6
+      id: pull-request
+      env:
+        HEAD: ${{ inputs.head_ref }}
+        BASE: ${{ inputs.base_ref }}
+        PR_TITLE: ${{ inputs.pr_title }}
+        PR_BODY: ${{ inputs.pr_body }}
+      with:
+        # This step won't trigger GHA checks generally
+        result-encoding: string
+        script: |
+          const { repo, owner } = context.repo;
+
+          const {data: pulls} = await github.request('GET /repos/{owner}/{repo}/pulls{?head,base,state}', {
+            owner,
+            repo,
+            head: `${owner}:${process.env.HEAD}`,
+            base: process.env.BASE,
+            state: 'open',
+          });
+
+          if (pulls.length) {
+            console.log("Pull request already exists\n" + pulls[0].url);
+            return String(pulls[0].number);
+          }
+
+          // TODO: handle no changes needed
+          const result = await github.rest.pulls.create({
+            owner,
+            repo,
+            head: process.env.PR_BRANCH,
+            base: process.env.BASE,
+            title: process.env.PR_TITLE,
+            body: process.env.PR_BODY,
+          });
+          console.log("Pull request created\n" + result.data.url);
+          return String(result.data.number);
+    - if: ${{ steps.create-pr.outputs.result != '' && inputs.labels != '' }}
+      name: Add PR labels
+      uses: actions/github-script@v6
+      env:
+        PR_NUMBER: ${{ steps.create-pr.outputs.result }}
+        LABELS: ${{ inputs.labels }}
+      with:
+        script: |
+          const { repo, owner } = context.repo;
+          const { PR_NUMBER, LABELS } = process.env;
+
+          await github.rest.issues.addLabels({
+            owner,
+            repo,
+            issue_number: Number(PR_NUMBER),
+            labels: LABELS.split(','),
+          });
+
+          console.log("Added labels to new PR");
