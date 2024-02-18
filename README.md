@@ -28,6 +28,10 @@ jobs:
     env:
       PR_BRANCH: chore/update-graphql
       GH_TOKEN: ${{ github.token }}
+      GIT_COMMITTER_NAME: Github Actions
+      GIT_COMMITTER_EMAIL: github-actions[bot]@users.noreply.github.com
+      GIT_AUTHOR_NAME: Github Actions
+      GIT_AUTHOR_EMAIL: github-actions[bot]@users.noreply.github.com
     steps:
       - uses: actions/checkout@v4
         with:
@@ -41,8 +45,6 @@ jobs:
 
       - id: commit
         name: Commit & Push changes
-        env:
-          EMAIL: github-actions[bot]@users.noreply.github.com
         run: |
           git checkout -b "${PR_BRANCH}"
           git add .
@@ -77,10 +79,10 @@ jobs:
 ### Inputs
 | Name     | Required | Default                                          | Description                                                                            |
 | -------- | -------- | ------------------------------------------------ | -------------------------------------------------------------------------------------- |
-| head_ref | ✔️        | `github.event.pull_request.head.ref`             | Branch with changes to be merged into base                                             |
-| base_ref | ✔️        | `github.event.pull_request.base.ref \|\| 'main'` | Base branch to receive the changes from head                                           |
-| pr_title | ✔️        | _None_                                           | Title for the created/updated pull request. Also usually used as merged commit message |
-| pr_body  | ✔️        | `""`                                             | Body for the created/updated pull request                                              |
+| head_ref | ✅        | `github.event.pull_request.head.ref`             | Branch with changes to be merged into base                                             |
+| base_ref | ✅        | `github.event.pull_request.base.ref \|\| 'main'` | Base branch to receive the changes from head                                           |
+| pr_title | ✅        | _None_                                           | Title for the created/updated pull request. Also usually used as merged commit message |
+| pr_body  | ✅        | `""`                                             | Body for the created/updated pull request                                              |
 | delete   | ❌        | _None_                                           | Whether to close a PR if it is open. Set to `true` to do so                            |
 | labels   | ❌        | _None_                                           | Comma separated list of labels to add to PR                                            |
 
