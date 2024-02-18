@@ -1,36 +1,23 @@
-name: Maintain Pull Request
+name: Maintain One Pull Request
 description: Maintain a single pull request given a set of head/base branches
 inputs:
   head_ref:
-    description: pull request head branch
+    description: Pull request head branch
     required: true
     default: ${{ github.event.pull_request.head.ref }}
-
   base_ref:
-    description: pull request base branch
+    description: Pull request base branch
     required: true
     default: ${{ github.event.pull_request.base.ref || 'main' }}
-
   pr_title:
-    description: pull request title
+    description: Pull request title
     required: true
-
   pr_body:
-    description: pull request body
+    description: Pull request body
     required: true
-
-  commit_message:
-    description: commit message
-
-  committer_name:
-    description: committer name
-    required: true
-    default: github-actions
-  
-  committer_email:
-    description: committer email
-    required: true
-    default: github-actions@github.com
+  delete:
+    description: |
+      Whether to close a PR if it is open. Set to `true` to do so
 
   labels:
     description: comma separated list of labels to add to PR
@@ -38,55 +25,13 @@ inputs:
 
 outputs:
   number:
-    description: pull request number
+    description: |
+      Pull request number, empty when no PR is created or when `delete: true``
     value: ${{ steps.create-pull-request.outputs.number }}
 
 runs:
   using: "composite"
   steps:
-    - shell: bash
-      name: Check for any changes
-      if: inputs.commit_message == ''
-      run: |
-        if [ -n "$(git status --porcelain)" ]; then
-          echo "Changes detected while no commit message was specified"
-          exit 1
-        fi
-
-    - shell: bash
-      name: Setup git config
-      env:
-        COMMITTER_NAME: ${{ inputs.committer_name }}
-        COMMITTER_EMAIL: ${{ inputs.committer_email }}
-      run: |
-        if [ ! -z "${COMMITTER_NAME}" ]; then
-          git config --global user.name "${COMMITTER_NAME}"
-        fi
-        if [ ! -z "${COMMITTER_EMAIL}" ]; then
-          git config --global user.email "${COMMITTER_EMAIL}"
-        fi
-
-    - shell: bash
-      if: inputs.commit_message != ''
-      id: push-changes
-      name: Push changes
-      env:
-        COMMIT_MESSAGE: ${{ inputs.commit_message }}
-        PR_BRANCH: ${{ inputs.head_ref }}
-      run: |
-        git checkout -b "${PR_BRANCH}"
-        git add .
-
-        if [ -n "$(git status -s)" ]; then
-          echo "Adding updated files"
-          git commit --no-verify -m "${COMMIT_MESSAGE}"
-          git push --no-verify --force origin "${PR_BRANCH}"
-          echo "no_changes=" >> $GITHUB_OUTPUT
-        else
-          echo "Nothing to commit"
-          echo "no_changes=true" >> $GITHUB_OUTPUT
-        fi
-
     - name: Create or update pull request
       uses: actions/github-script@v6
       id: pull-request
@@ -95,6 +40,7 @@ runs:
         BASE: ${{ inputs.base_ref }}
         PR_TITLE: ${{ inputs.pr_title }}
         PR_BODY: ${{ inputs.pr_body }}
+        DELETE: ${{ inputs.delete }}
       with:
         # This step won't trigger GHA checks generally
         result-encoding: string
@@ -111,10 +57,21 @@ runs:
 
           if (pulls.length) {
             console.log("Pull request already exists\n" + pulls[0].url);
+            if (process.env.DELETE === 'true') {
+              await github.rest.pulls.update({
+                owner,
+                repo,
+                pull_number: pulls[0].number,
+                state: 'closed',
+              });
+              console.log("Pull request closed");
+              return;
+            }
             return String(pulls[0].number);
+          } else if (process.env.DELETE === 'true') {
+            return; // Do nothing
           }
 
-          // TODO: handle no changes needed
           const result = await github.rest.pulls.create({
             owner,
             repo,
@@ -143,4 +100,4 @@ runs:
             labels: LABELS.split(','),
           });
 
-          console.log("Added labels to new PR");
+          console.log("Added labels to PR");
