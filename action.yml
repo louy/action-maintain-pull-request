@@ -32,7 +32,7 @@ outputs:
   number:
     description: |
       Pull request number, empty when no PR is created or when `delete: true``
-    value: ${{ steps.create-pull-request.outputs.number }}
+    value: ${{ steps.pull-request.outputs.result }}
 
 runs:
   using: "composite"
@@ -87,11 +87,11 @@ runs:
           });
           console.log("Pull request created\n" + result.data.url);
           return String(result.data.number);
-    - if: ${{ steps.create-pr.outputs.result != '' && inputs.labels != '' }}
+    - if: ${{ steps.pull-request.outputs.result != '' && inputs.labels != '' }}
       name: Add PR labels
       uses: actions/github-script@v6
       env:
-        PR_NUMBER: ${{ steps.create-pr.outputs.result }}
+        PR_NUMBER: ${{ steps.pull-request.outputs.result }}
         LABELS: ${{ inputs.labels }}
       with:
         script: |
