@@ -2,25 +2,27 @@ name: Maintain One Pull Request
 description: Maintain a single pull request given a set of head/base branches
 inputs:
   head_ref:
-    description: Pull request head branch
+    description: Branch with changes to be merged into base
     required: true
     default: ${{ github.event.pull_request.head.ref }}
   base_ref:
-    description: Pull request base branch
+    description: Base branch to receive the changes from head
     required: true
     default: ${{ github.event.pull_request.base.ref || 'main' }}
   pr_title:
-    description: Pull request title
+    description: |
+      Title for the created/updated pull request. Also usually used as merged commit message
     required: true
   pr_body:
-    description: Pull request body
+    description: Body for the created/updated pull request
     required: true
+    default: ""
   delete:
     description: |
       Whether to close a PR if it is open. Set to `true` to do so
 
   labels:
-    description: comma separated list of labels to add to PR
+    description: Comma separated list of labels to add to PR
     required: false
 
 outputs:
