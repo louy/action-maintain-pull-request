@@ -85,6 +85,6 @@ jobs:
 | labels   | ❌        | _None_                                           | Comma separated list of labels to add to PR                                            |
 
 ### Outputs
-| Name   | Description                                                              |
-| ------ | ------------------------------------------------------------------------ |
-| number | Pull request number, empty when no PR is created or when `delete: true`` |
+| Name   | Description                                                             |
+| ------ | ----------------------------------------------------------------------- |
+| number | Pull request number, empty when no PR is created or when `delete: true` |
