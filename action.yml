@@ -7,11 +7,10 @@ inputs:
   head_ref:
     description: Branch with changes to be merged into base
     required: true
-    default: ${{ github.event.pull_request.head.ref }}
   base_ref:
     description: Base branch to receive the changes from head
     required: true
-    default: ${{ github.event.pull_request.base.ref || 'main' }}
+    default: ${{ github.ref_name || 'main' }}
   pr_title:
     description: |
       Title for the created/updated pull request. Also usually used as merged commit message

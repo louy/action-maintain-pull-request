@@ -77,14 +77,14 @@ jobs:
 
 ## Documentation
 ### Inputs
-| Name     | Required | Default                                          | Description                                                                            |
-| -------- | -------- | ------------------------------------------------ | -------------------------------------------------------------------------------------- |
-| head_ref | ✅        | `github.event.pull_request.head.ref`             | Branch with changes to be merged into base                                             |
-| base_ref | ✅        | `github.event.pull_request.base.ref \|\| 'main'` | Base branch to receive the changes from head                                           |
-| pr_title | ✅        | _None_                                           | Title for the created/updated pull request. Also usually used as merged commit message |
-| pr_body  | ✅        | `""`                                             | Body for the created/updated pull request                                              |
-| delete   | ❌        | _None_                                           | Whether to close a PR if it is open. Set to `true` to do so                            |
-| labels   | ❌        | _None_                                           | Comma separated list of labels to add to PR                                            |
+| Name     | Required | Default                       | Description                                                                            |
+| -------- | -------- | ----------------------------- | -------------------------------------------------------------------------------------- |
+| head_ref | ✅        | _None_                        | Branch with changes to be merged into base                                             |
+| base_ref | ✅        | `github.ref_name \|\| 'main'` | Base branch to receive the changes from head                                           |
+| pr_title | ✅        | _None_                        | Title for the created/updated pull request. Also usually used as merged commit message |
+| pr_body  | ✅        | `""`                          | Body for the created/updated pull request                                              |
+| delete   | ❌        | _None_                        | Whether to close a PR if it is open. Set to `true` to do so                            |
+| labels   | ❌        | _None_                        | Comma separated list of labels to add to PR                                            |
 
 ### Outputs
 | Name   | Description                                                             |
