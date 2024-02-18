@@ -9,7 +9,7 @@ This action is useful for automated changes, especially things that should be co
 
 Assuming a codebase is using [GraphQL Code Generator](https://the-guild.dev/graphql/codegen/docs/) to generate its consumer code, you can have a pipeline such as:
 
-```
+```yaml
 # Regularly keep graphql schema up to date, by running `graphql-codegen` and creating a PR with the changes that auto merges into main
 name: Update GraphQL Schema
 
