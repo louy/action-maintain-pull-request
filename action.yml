@@ -1,5 +1,8 @@
 name: Maintain One Pull Request
 description: Maintain a single pull request given a set of head/base branches
+branding:
+  icon: git-pull-request
+  color: purple
 inputs:
   head_ref:
     description: Branch with changes to be merged into base
