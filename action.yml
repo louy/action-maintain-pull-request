@@ -71,6 +71,15 @@ runs:
               console.log("Pull request closed");
               return;
             }
+            if (pulls[0].title !== process.env.PR_TITLE || pulls[0].body !== process.env.PR_BODY) {
+              await github.rest.pulls.update({
+                owner,
+                repo,
+                pull_number: pulls[0].number,
+                title: process.env.PR_TITLE,
+                body: process.env.PR_BODY,
+              });
+            }
             return String(pulls[0].number);
           } else if (process.env.DELETE === 'true') {
             return; // Do nothing
