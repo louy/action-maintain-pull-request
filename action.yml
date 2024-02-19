@@ -69,7 +69,7 @@ runs:
                 state: 'closed',
               });
               console.log("Pull request closed");
-              return;
+              return '';
             }
             if (pulls[0].title !== process.env.PR_TITLE || pulls[0].body !== process.env.PR_BODY) {
               await github.rest.pulls.update({
@@ -82,7 +82,7 @@ runs:
             }
             return String(pulls[0].number);
           } else if (process.env.DELETE === 'true') {
-            return; // Do nothing
+            return ''; // Do nothing
           }
 
           const result = await github.rest.pulls.create({
