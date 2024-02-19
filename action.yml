@@ -110,7 +110,7 @@ runs:
             owner,
             repo,
             issue_number: Number(PR_NUMBER),
-            labels: LABELS.split(','),
+            labels: LABELS.split(',').map(l => l.trim()).filter(Boolean),
           });
 
           console.log("Added labels to PR");
